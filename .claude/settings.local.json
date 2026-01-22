@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run *)",
+      "Bash(pnpm run *)",
+      "Bash(pnpm -r *)",
+      "Bash(npm -w *)",
+      "Bash(pnpm -w *)",
+      "Bash(node *)",
+      "Bash(corepack *)",
+      "Bash(git status)",
+      "Bash(git diff)",
+      "Bash(git log *)",
+      "Bash(git checkout -b *)",
+      "Bash(git branch *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git restore *)",
+      "Bash(git reset *)",
+      "Bash(docker compose *)",
+      "Bash(docker-compose *)",
+      "Bash(git push:*)"
+    ],
+    "deny": [
+      "Read(**/*secret*)",
+      "Read(**/*credentials*)",
+      "Bash(curl:*)",
+      "Bash(wget:*)"
+    ]
+  }
+}
