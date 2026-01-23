@@ -26,8 +26,9 @@ const TEMPLATE_SUBJECTS: Record<Templates, string> = {
   [Templates.PASSWORD_RESET]: 'Reset Your Password'
 };
 
-// Template function type
-type TemplateFunction = (props: unknown) => React.ReactNode;
+// Template function type - uses any for flexibility with different email template props
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type TemplateFunction = (props: any) => React.ReactNode;
 
 // Template registry - cached for performance
 const templates: Readonly<Record<Templates, TemplateFunction>> = {

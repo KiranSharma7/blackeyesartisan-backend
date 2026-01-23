@@ -1,38 +1,24 @@
 export default ({ env }) => {
   const isProduction = env('NODE_ENV') === 'production';
 
-  // Check if S3/DigitalOcean Spaces is configured
-  const isS3Configured =
-    env('DO_SPACE_ACCESS_KEY') && env('DO_SPACE_SECRET_KEY');
+  // Check if Cloudinary is configured
+  const isCloudinaryConfigured =
+    env('CLOUDINARY_NAME') && env('CLOUDINARY_KEY') && env('CLOUDINARY_SECRET');
 
   return {
     upload: {
       config: {
-        provider: isS3Configured ? 'aws-s3' : 'local',
-        providerOptions: isS3Configured
+        provider: isCloudinaryConfigured ? 'cloudinary' : 'local',
+        providerOptions: isCloudinaryConfigured
           ? {
-              rootPath: env('DO_SPACE_PATH', ''),
-              credentials: {
-                accessKeyId: env('DO_SPACE_ACCESS_KEY'),
-                secretAccessKey: env('DO_SPACE_SECRET_KEY')
-              },
-              region: env('DO_SPACE_REGION', 'nyc3'),
-              endpoint: env('DO_SPACE_ENDPOINT'),
-              params: {
-                Bucket: env('DO_SPACE_BUCKET'),
-                // Cache control for uploaded assets (1 year)
-                CacheControl: 'max-age=31536000'
-              }
+              cloud_name: env('CLOUDINARY_NAME'),
+              api_key: env('CLOUDINARY_KEY'),
+              api_secret: env('CLOUDINARY_SECRET')
             }
           : {},
         actionOptions: {
-          upload: {
-            // ACL for uploaded files
-            ACL: isProduction ? 'public-read' : undefined
-          },
-          uploadStream: {
-            ACL: isProduction ? 'public-read' : undefined
-          },
+          upload: {},
+          uploadStream: {},
           delete: {}
         },
         // File size limits
@@ -44,6 +30,11 @@ export default ({ env }) => {
           medium: 750,
           small: 500,
           xsmall: 64
+        },
+        // Security validation for uploaded files
+        security: {
+          allowedTypes: ['image/*', 'application/*', 'video/*', 'audio/*'],
+          deniedTypes: ['application/x-sh', 'application/x-dosexec', 'application/x-executable']
         }
       }
     },

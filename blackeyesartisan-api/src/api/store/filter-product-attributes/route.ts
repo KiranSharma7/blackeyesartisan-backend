@@ -1,21 +1,43 @@
 import { MedusaRequest, MedusaResponse } from '@medusajs/framework';
+import { ContainerRegistrationKeys } from '@medusajs/framework/utils';
 
 export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
-  const knex = req.scope.resolve('__pg_connection__');
+  const query = req.scope.resolve(ContainerRegistrationKeys.QUERY);
 
-  const [collection, type, material] = await Promise.all([
-    knex('product_collection').select('id', 'title as value').whereNull('deleted_at'),
-    knex('product_type').select('id', 'value').whereNull('deleted_at'),
-    knex('product')
-      .distinct('material')
-      .whereNotNull('material')
-      .whereNull('deleted_at')
-      .pluck('material')
+  // Fetch collections, types, and products with materials in parallel
+  const [collectionsResult, typesResult, productsResult] = await Promise.all([
+    query.graph({
+      entity: 'product_collection',
+      fields: ['id', 'title'],
+      filters: {}
+    }),
+    query.graph({
+      entity: 'product_type',
+      fields: ['id', 'value'],
+      filters: {}
+    }),
+    query.graph({
+      entity: 'product',
+      fields: ['material'],
+      filters: {}
+    })
   ]);
 
+  // Extract unique materials from products
+  const uniqueMaterials = [
+    ...new Set(
+      (productsResult.data as Array<{ material?: string | null }>)
+        .map((p) => p.material)
+        .filter((m): m is string => m != null && m !== '')
+    )
+  ];
+
   res.json({
-    collection,
-    type,
-    material: material.map((v) => ({ id: v, value: v }))
+    collection: collectionsResult.data.map((c: { id: string; title: string }) => ({
+      id: c.id,
+      value: c.title
+    })),
+    type: typesResult.data,
+    material: uniqueMaterials.map((v) => ({ id: v, value: v }))
   });
 };

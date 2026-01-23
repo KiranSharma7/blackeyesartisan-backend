@@ -18,15 +18,17 @@ export default [
             'data:',
             'cdn.jsdelivr.net',
             'strapi.io',
-            process.env.SPACE_URL
-          ].filter(Boolean),
+            'market-assets.strapi.io',
+            'res.cloudinary.com'
+          ],
           'media-src': [
             "'self'",
             'blob:',
             'data:',
             'strapi.io',
-            process.env.SPACE_URL
-          ].filter(Boolean),
+            'market-assets.strapi.io',
+            'res.cloudinary.com'
+          ],
           'script-src': ["'self'", "'unsafe-inline'", 'cdn.jsdelivr.net'],
           'frame-ancestors': ["'self'"],
           upgradeInsecureRequests: isProduction ? true : null

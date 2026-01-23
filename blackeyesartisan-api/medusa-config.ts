@@ -31,10 +31,12 @@ if (isStripeConfigured) {
   };
 }
 
-// Redis Cache Configuration - Significantly improves API response times
+// Redis Configuration - Significantly improves API response times
 const redisUrl = process.env.REDIS_URL;
 if (redisUrl) {
-  console.log('Redis URL found. Enabling cache module for improved performance');
+  console.log('Redis URL found. Enabling Redis-based modules for improved performance');
+
+  // Caching Module (replaces deprecated Cache Module in v2.11.0+)
   dynamicModules[Modules.CACHE] = {
     resolve: '@medusajs/medusa/cache-redis',
     options: {
@@ -57,39 +59,50 @@ if (redisUrl) {
     resolve: '@medusajs/medusa/workflow-engine-redis',
     options: {
       redis: {
-        url: redisUrl
+        redisUrl // Updated from deprecated 'url' property (v2.12.2+)
       }
+    }
+  };
+
+  // Enable Redis-based locking for distributed environments
+  dynamicModules[Modules.LOCKING] = {
+    resolve: '@medusajs/medusa/locking',
+    options: {
+      providers: [
+        {
+          resolve: '@medusajs/medusa/locking-redis',
+          id: 'locking-redis',
+          is_default: true,
+          options: {
+            redisUrl
+          }
+        }
+      ]
     }
   };
 }
 
-// File Storage Configuration
-const isFileStorageConfigured =
-  process.env.DO_SPACE_URL &&
-  process.env.DO_SPACE_ACCESS_KEY &&
-  process.env.DO_SPACE_SECRET_KEY;
+// Cloudinary File Storage Configuration
+const isCloudinaryConfigured =
+  process.env.CLOUDINARY_CLOUD_NAME &&
+  process.env.CLOUDINARY_API_KEY &&
+  process.env.CLOUDINARY_API_SECRET;
 
-if (isFileStorageConfigured) {
-  console.log('DigitalOcean Spaces configured. Enabling file module');
+if (isCloudinaryConfigured) {
+  console.log('Cloudinary configured. Enabling Cloudinary file module');
   dynamicModules[Modules.FILE] = {
     resolve: '@medusajs/medusa/file',
     options: {
       providers: [
         {
-          resolve: '@medusajs/file-s3',
-          id: 's3',
+          resolve: './src/modules/cloudinary-file',
+          id: 'cloudinary',
           options: {
-            file_url: process.env.DO_SPACE_URL,
-            access_key_id: process.env.DO_SPACE_ACCESS_KEY,
-            secret_access_key: process.env.DO_SPACE_SECRET_KEY,
-            region: process.env.DO_SPACE_REGION,
-            bucket: process.env.DO_SPACE_BUCKET,
-            endpoint: process.env.DO_SPACE_ENDPOINT,
-            // Performance optimizations for file uploads
-            additional_data: {
-              ACL: 'public-read',
-              CacheControl: 'max-age=31536000' // 1 year cache for static assets
-            }
+            cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+            api_key: process.env.CLOUDINARY_API_KEY,
+            api_secret: process.env.CLOUDINARY_API_SECRET,
+            secure: true,
+            folder: 'blackeyesartisan' // Cloudinary folder for organization
           }
         }
       ]

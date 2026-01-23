@@ -1,4 +1,10 @@
-import { defineMiddlewares, type MiddlewareRoute } from '@medusajs/framework';
+import {
+  defineMiddlewares,
+  type MiddlewareRoute,
+  type MedusaRequest,
+  type MedusaResponse,
+  type MedusaNextFunction
+} from '@medusajs/framework/http';
 import { storeSearchRoutesMiddlewares } from './store/search/middlewares';
 
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
@@ -7,11 +13,27 @@ const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
 const RATE_LIMIT_MAX_REQUESTS = IS_PRODUCTION ? 100 : 1000;
 
-// Simple in-memory rate limiter (for production, use Redis-based rate limiting)
+/**
+ * Simple in-memory rate limiter.
+ *
+ * WARNING: This implementation uses in-memory storage and will NOT work correctly
+ * in distributed/multi-process environments (e.g., PM2 cluster mode, multiple containers).
+ *
+ * For production deployments with multiple instances, consider:
+ * 1. Using a Redis-based rate limiter (e.g., rate-limiter-flexible with Redis)
+ * 2. Using a reverse proxy rate limiter (e.g., Nginx, Cloudflare)
+ * 3. Using an API gateway with built-in rate limiting
+ */
 const requestCounts = new Map<string, { count: number; resetTime: number }>();
 
-const rateLimitMiddleware = async (req: any, res: any, next: () => void) => {
-  const clientIp = req.ip || req.headers['x-forwarded-for'] || 'unknown';
+const rateLimitMiddleware = async (
+  req: MedusaRequest,
+  res: MedusaResponse,
+  next: MedusaNextFunction
+) => {
+  const forwardedFor = req.headers['x-forwarded-for'];
+  const clientIp =
+    req.ip || (Array.isArray(forwardedFor) ? forwardedFor[0] : forwardedFor) || 'unknown';
   const now = Date.now();
 
   let clientData = requestCounts.get(clientIp);
@@ -40,7 +62,11 @@ const rateLimitMiddleware = async (req: any, res: any, next: () => void) => {
 };
 
 // Security headers middleware
-const securityHeadersMiddleware = async (_req: any, res: any, next: () => void) => {
+const securityHeadersMiddleware = async (
+  _req: MedusaRequest,
+  res: MedusaResponse,
+  next: MedusaNextFunction
+) => {
   // Security headers
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
@@ -54,7 +80,11 @@ const securityHeadersMiddleware = async (_req: any, res: any, next: () => void) 
 };
 
 // Cache control middleware for GET requests
-const cacheControlMiddleware = async (req: any, res: any, next: () => void) => {
+const cacheControlMiddleware = async (
+  req: MedusaRequest,
+  res: MedusaResponse,
+  next: MedusaNextFunction
+) => {
   if (req.method === 'GET') {
     // Default cache headers - can be overridden by specific routes
     const cacheMaxAge = IS_PRODUCTION ? 60 : 0; // 1 minute in production
@@ -64,7 +94,11 @@ const cacheControlMiddleware = async (req: any, res: any, next: () => void) => {
 };
 
 // Request logging middleware for performance monitoring
-const requestTimingMiddleware = async (req: any, res: any, next: () => void) => {
+const requestTimingMiddleware = async (
+  req: MedusaRequest,
+  res: MedusaResponse,
+  next: MedusaNextFunction
+) => {
   const start = Date.now();
 
   res.on('finish', () => {

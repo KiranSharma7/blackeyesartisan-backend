@@ -10,7 +10,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **Database**: PostgreSQL (with SQLite support for development)
 **Job Queue**: Redis (Upstash in production)
 **Email Provider**: Resend
-**File Storage**: DigitalOcean Spaces (S3-compatible)
+**File Storage**: Cloudinary
 **Payments**: Stripe
 
 This is the commerce backend that powers the BlackEyesArtisan eCommerce storefront. It handles products, inventory, cart/checkout, orders, regions, shipping, and integrations with external services (Stripe, Resend, DigitalOcean).
@@ -175,11 +175,12 @@ Orchestrates sending confirmation emails after order placement:
 - Uses Resend notification module to send emails
 - Implemented as a Medusa workflow with defined steps
 
-### DigitalOcean Spaces File Storage
-Configured in `medusa-config.ts`:
-- S3-compatible file provider
+### Cloudinary File Storage
+Custom file provider in `src/modules/cloudinary-file/`:
+- Cloud-based media management and CDN
+- Automatic image optimization and transformations
 - Used for product images, documents
-- Credentials from `.env` (DO_SPACE_ACCESS_KEY, DO_SPACE_SECRET_KEY, etc.)
+- Credentials from `.env` (CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET)
 
 ### Stripe Payment Integration
 Configured in `medusa-config.ts`:
@@ -203,7 +204,7 @@ Key variables (see `.env.example`):
 - `REDIS_URL` - Redis/Upstash for job queue and caching
 - `STRIPE_API_KEY`, `STRIPE_WEBHOOK_SECRET` - Stripe payment
 - `RESEND_API_KEY`, `RESEND_FROM_EMAIL` - Transactional email
-- `DO_SPACE_*` - DigitalOcean Spaces file storage
+- `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` - Cloudinary file storage
 - `STORE_CORS`, `ADMIN_CORS`, `AUTH_CORS` - CORS origins for client apps
 
 ## Common Development Tasks
@@ -297,7 +298,7 @@ Key variables (see `.env.example`):
 - [ ] Generate strong `JWT_SECRET` and `COOKIE_SECRET`
 - [ ] Configure Stripe credentials and webhook secret
 - [ ] Set up Resend API key and verified sender email
-- [ ] Configure DigitalOcean Spaces credentials
+- [ ] Configure Cloudinary credentials (cloud_name, api_key, api_secret)
 - [ ] Set CORS origins for connected storefronts
 - [ ] Run database migrations on first deploy
 - [ ] Enable search indexing: `npm run enable:search-engine`
@@ -307,7 +308,7 @@ Key variables (see `.env.example`):
 
 - **Redis**: Used for job queue (Resend emails, webhooks) and caching
 - **Search Index**: Enable search engine for fast product queries
-- **File Storage**: DigitalOcean Spaces handles image serving (offload from API)
+- **File Storage**: Cloudinary handles image serving with automatic CDN and optimization
 - **Batch Operations**: Use Medusa's bulk APIs for importing products/inventory
 
 ## Debugging Tips
@@ -325,4 +326,4 @@ Key variables (see `.env.example`):
 - [Medusa API Reference](https://docs.medusajs.com/api)
 - [Stripe Integration Guide](https://docs.medusajs.com/modules/payment)
 - [Resend Email Documentation](https://resend.com/docs)
-- [DigitalOcean Spaces Guide](https://docs.digitalocean.com/products/spaces/)
+- [Cloudinary Documentation](https://cloudinary.com/documentation)

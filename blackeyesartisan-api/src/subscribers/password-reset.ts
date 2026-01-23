@@ -1,4 +1,4 @@
-import { SubscriberArgs, type SubscriberConfig } from '@medusajs/medusa';
+import { SubscriberArgs, type SubscriberConfig } from '@medusajs/framework';
 import { Modules } from '@medusajs/framework/utils';
 
 export default async function resetPasswordTokenHandler({
